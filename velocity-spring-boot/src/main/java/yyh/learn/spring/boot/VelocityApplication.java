@@ -9,9 +9,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author yyh
  */
 @SpringBootApplication
-public class ApplicationShiro {
+public class VelocityApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ApplicationShiro.class, args);
+        SpringApplication.run(VelocityApplication.class, args);
     }
 }
