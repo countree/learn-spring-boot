@@ -5,6 +5,8 @@
     <title>Velocity Test</title>
 </head>
 <body>
-hello velocity and ${name}
+#set($basePath=$request.servletContext.contextPath)
+hello velocity and ${name} $basePath
+#pages(9898,1)
 </body>
 </html>

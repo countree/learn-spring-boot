@@ -1,0 +1,3 @@
+#macro(pages $count $currentPage)
+<h2>总条数$count</h2>    <h1>当前页$currentPage</h1>
+#end
