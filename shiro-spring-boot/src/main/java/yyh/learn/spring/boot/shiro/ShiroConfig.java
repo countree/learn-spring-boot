@@ -18,7 +18,6 @@ import java.util.Map;
  */
 @Configuration
 public class ShiroConfig {
-    private final static String[] EXCLUDE_PATHS = {"/static/*", "/image/*"};
 
     /**
      * 创建shiroFilter
@@ -46,13 +45,19 @@ public class ShiroConfig {
     }
 
 
-    @Bean(name = "securityManager")
-    public SecurityManager securityManager() {
-        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+    @Bean
+    public AuthorizingRealm getMyAuthRealm() {
+        //因为realm需要 自动注入service所以必须由spring管理realm
         AuthorizingRealm authorizingRealm = new MyAuthRealm();
         //设置自定义的密码对比方法
         authorizingRealm.setCredentialsMatcher(new CustomCredentialsMatcher());
-        securityManager.setRealm(authorizingRealm);
+        return authorizingRealm;
+    }
+
+    @Bean(name = "securityManager")
+    public SecurityManager securityManager() {
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
+        securityManager.setRealm(getMyAuthRealm());
         return securityManager;
     }
 
