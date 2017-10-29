@@ -1,9 +1,18 @@
 package yyh.learn.spring.boot.entity;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable{
     private String name;
     private String password;
     private Integer age;
+
+    public User() {
+    }
+
+    public User(String name) {
+        this.name = name;
+    }
 
     public String getPassword() {
         return password;

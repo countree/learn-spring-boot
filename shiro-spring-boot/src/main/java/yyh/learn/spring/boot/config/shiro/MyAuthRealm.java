@@ -1,4 +1,4 @@
-package yyh.learn.spring.boot.shiro;
+package yyh.learn.spring.boot.config.shiro;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.shiro.authc.AuthenticationException;
