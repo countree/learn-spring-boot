@@ -1,5 +1,6 @@
 package yyh.learn.spring.boot.shiro;
 
+import org.apache.shiro.cache.ehcache.EhCacheManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
@@ -48,19 +49,45 @@ public class ShiroConfig {
     @Bean
     public AuthorizingRealm getMyAuthRealm() {
         //因为realm需要 自动注入service所以必须由spring管理realm
-        AuthorizingRealm authorizingRealm = new MyAuthRealm();
+        AuthorizingRealm userRealm = new MyAuthRealm();
         //设置自定义的密码对比方法
-        authorizingRealm.setCredentialsMatcher(new CustomCredentialsMatcher());
-        return authorizingRealm;
+        userRealm.setCredentialsMatcher(new CustomCredentialsMatcher());
+//        //启用缓存,默认false
+//        userRealm.setCachingEnabled(true);
+//        //  启用身份验证缓存，即缓存AuthenticationInfo信息，默认false；
+//        userRealm.setAuthenticationCachingEnabled(true);
+//        //  缓存AuthenticationInfo信息的缓存名称,即配置在ehcache.xml中的cache name
+//        userRealm.setAuthenticationCacheName("authenticationCache");
+//        //  启用授权缓存，即缓存AuthorizationInfo信息，默认true； 默认值根据版本不同可能有不一样
+        userRealm.setAuthorizationCachingEnabled(true);
+        //  缓存AuthorizationInfo信息的缓存名称；
+        userRealm.setAuthorizationCacheName("authorizationCache");
+        return userRealm;
     }
 
+    /**
+     * securityManager 配置
+     *
+     * @return
+     */
     @Bean(name = "securityManager")
     public SecurityManager securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(getMyAuthRealm());
+        securityManager.setCacheManager(ehCacheManager());
         return securityManager;
     }
 
+    /**
+     * ehcacheManager 配置
+     *
+     * @return
+     */
+    public EhCacheManager ehCacheManager() {
+        EhCacheManager cacheManager = new EhCacheManager();
+        cacheManager.setCacheManagerConfigFile("classpath:shiro-ehcache.xml");
+        return cacheManager;
+    }
 //    @Bean
 //    public AuthorizationAttributeSourceAdvisor getAuthorizationAttributeSourceAdvisor() {
 //        AuthorizationAttributeSourceAdvisor aasa = new AuthorizationAttributeSourceAdvisor();
