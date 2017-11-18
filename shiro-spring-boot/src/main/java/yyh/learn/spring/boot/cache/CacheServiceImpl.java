@@ -16,7 +16,12 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class CacheServiceImpl<K, V> implements CacheService<K, V> {
-
+    /**
+     * redisTemplate使用的是redis的zset类型
+     * ，而spring 的Cache也是使用的redisTemplate
+     * ，唯一的区别是spring Cache设置过期时间是通过cacheName设置的
+     * ，而直接使用RedisTemplate可以根据key自定义设置
+     */
     @Autowired
     RedisTemplate<K, V> redisTemplate;
 

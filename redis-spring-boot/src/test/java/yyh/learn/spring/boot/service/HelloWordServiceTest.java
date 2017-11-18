@@ -53,6 +53,7 @@ public class HelloWordServiceTest {
         stringRedisTemplate.opsForValue().set("key-test-yhh", "sdlfkjsdlkfjl 伺机待发");
         redisTemplate.opsForValue().set("key-test-yyh", "第二次设置key-test-yyh");
         redisTemplate.opsForValue().set("key-test-entity", new User("entity value"));
+        stringRedisTemplate.opsForZSet().add(CacheNameConstant.AUTHORIZATION_CACHE_NAME, "session2", 0);
     }
 
 }
