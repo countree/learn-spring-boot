@@ -7,10 +7,12 @@ import org.apache.shiro.session.mgt.SessionManager;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import yyh.learn.spring.boot.cache.ShiroRedisCache;
-import yyh.learn.spring.boot.cache.ShiroRedisCacheManager;
+import org.springframework.data.redis.core.RedisTemplate;
+import yyh.learn.spring.boot.cache.CacheNameConstant;
+import yyh.learn.spring.boot.cache.ShiroSpringCacheManager;
 
 import javax.servlet.Filter;
 import java.util.LinkedHashMap;
@@ -30,9 +32,9 @@ public class ShiroConfig {
      * @return
      */
     @Bean
-    public ShiroFilterFactoryBean shiroFilter() {
+    public ShiroFilterFactoryBean shiroFilter(SecurityManager securityManager) {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
-        shiroFilterFactoryBean.setSecurityManager(securityManager());
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
         Map<String, Filter> shiroFilters = shiroFilterFactoryBean.getFilters();
         //增加自定义的filter到shiroFilter链
         shiroFilters.put("urlPerms", new CheckPermissionFilter());
@@ -65,7 +67,7 @@ public class ShiroConfig {
 //        //  启用授权缓存，即缓存AuthorizationInfo信息，默认true； 默认值根据版本不同可能有不一样
         userRealm.setAuthorizationCachingEnabled(true);
         //  缓存AuthorizationInfo信息的缓存名称；
-        userRealm.setAuthorizationCacheName("authorizationCache");
+        userRealm.setAuthorizationCacheName(CacheNameConstant.AUTHORIZATION_CACHE_NAME);
         return userRealm;
     }
 
@@ -75,14 +77,14 @@ public class ShiroConfig {
      * @return
      */
     @Bean(name = "securityManager")
-    public SecurityManager securityManager() {
+    public SecurityManager securityManager(@Qualifier("shiroCacheManager") CacheManager cacheManager) {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         // 设置realm
         securityManager.setRealm(getMyAuthRealm());
         // 设置session管理器
         securityManager.setSessionManager(sessionManager());
         // 设置缓存管理器
-        securityManager.setCacheManager(cacheManager());
+        securityManager.setCacheManager(cacheManager);
         return securityManager;
     }
 
@@ -102,22 +104,10 @@ public class ShiroConfig {
      *
      * @return
      */
-    @Bean(name = "shiroRedisCacheManager")
-    public CacheManager cacheManager() {
-        CacheManager shiroRedisCacheManager = new ShiroRedisCacheManager();
+    @Bean(name = "shiroCacheManager")
+    public CacheManager cacheManager(@Qualifier("cacheManager") org.springframework.cache.CacheManager cacheManager, @Qualifier("redisTemplate") RedisTemplate redisTemplate) {
+        CacheManager shiroRedisCacheManager = new ShiroSpringCacheManager(cacheManager, redisTemplate);
         return shiroRedisCacheManager;
-    }
-
-    /**
-     * 使用RedisTemplate缓存
-     * <p>这里只是显式声明下，让ShrioRedisCacheManager能够自动注入Cache</p>
-     * <P>也是为了能够自动注入RedisTemplate</P>
-     *
-     * @return
-     */
-    @Bean
-    public ShiroRedisCache shiroRedisCache() {
-        return new ShiroRedisCache();
     }
 
     /**

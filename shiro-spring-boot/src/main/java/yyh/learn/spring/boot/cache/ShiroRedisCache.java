@@ -1,12 +1,9 @@
 package yyh.learn.spring.boot.cache;
 
-import ch.qos.logback.core.encoder.ByteArrayUtil;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.dao.DataAccessException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.CacheManager;
-import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCache;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -16,64 +13,55 @@ import java.util.Set;
 
 public class ShiroRedisCache<K, V> implements Cache<K, V> {
 
-    @Autowired
+    private org.springframework.cache.Cache cache;
+
     RedisTemplate<K, V> redisTemplate;
-    @Autowired
-    CacheManager redisCacheManager;
+
+    public ShiroRedisCache() {
+    }
+
+    public ShiroRedisCache(org.springframework.cache.Cache cache, RedisTemplate redisTemplate) {
+        this.cache = cache;
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     public V get(Object k) throws CacheException {
-        org.springframework.cache.Cache cache = redisCacheManager.getCache(CacheKeyName.TEST_CACHE_NAME_ONE);
-        cache.get(k);
-//        cache.clear();
-        return redisTemplate.opsForValue().get(k);
+        return (V) cache.get(k);
     }
 
     @Override
     public V put(final K k, final V v) throws CacheException {
-        org.springframework.cache.Cache cache = redisCacheManager.getCache(CacheKeyName.TEST_CACHE_NAME_ONE);
         cache.put(k, v);
-//        redisTemplate.opsForValue().set(k, v);
         return v;
     }
 
     @Override
     public V remove(K k) throws CacheException {
-        V v = redisTemplate.opsForValue().get(k);
-        redisTemplate.delete(k);
-        return v;
+        cache.evict(k);
+        return get(k);
     }
 
     @Override
     public void clear() throws CacheException {
-
+        cache.clear();
     }
 
     @Override
     public int size() {
-        // 数据库的大小
-        return redisTemplate.execute(new RedisCallback<Integer>() {
-            @Override
-            public Integer doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                return redisConnection.dbSize().intValue();
-            }
-        });
+        //zset的key有多少个
+//        return redisTemplate.keys((K) cache.getName()).size();
+        return redisTemplate.opsForZSet().size((K) cache.getName()).intValue();
     }
 
     @Override
     public Set<K> keys() {
-        // 数据库的大小
-        return redisTemplate.keys((K) "*");
+        //所有的keys
+        return redisTemplate.keys((K) cache.getName());
     }
 
     @Override
     public Collection<V> values() {
-        redisTemplate.execute(new RedisCallback<Object>() {
-            @Override
-            public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                return redisConnection.dbSize();
-            }
-        });
-        return null;
+        return redisTemplate.boundZSetOps((K) cache.getName()).range(0, redisTemplate.opsForZSet().size((K) cache.getName()));
     }
 }

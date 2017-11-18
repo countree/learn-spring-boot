@@ -99,7 +99,13 @@ public class RedisConfig extends CachingConfigurerSupport {
     }
 
     /**
-     * 不一样的是 RedisTemplate使用的是redis的zset类型，StringRedisTemplate使用的是redis的String类型
+     * 与RedisTemplate不同的是
+     * redisTemplate在存储的时候key会自动加一个引号""
+     * stringRedisTemplate.opsForValue().set("key-test-yhh", "第二次设置key-test-yyh");
+     * redisTemplate.opsForValue().set("key-test-yyh", "第二次设置key-test-yyh");
+     * <p>
+     * 其它的操作类型都会在key上加上一个标识符如^keys表示redisTemplate的zset的key等
+     * ，而stringRedisTemplate的zset的key自己写什么就是什么
      *
      * @param factory
      * @return
