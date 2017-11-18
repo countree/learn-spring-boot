@@ -14,6 +14,7 @@ import yyh.learn.spring.boot.entity.User;
 public class MyAuthRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
+        System.out.println("==============doGetAuthorizationInfo 没有走缓存.....");
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
         simpleAuthorizationInfo.addStringPermission("/hello");
         simpleAuthorizationInfo.addStringPermission("/haha");

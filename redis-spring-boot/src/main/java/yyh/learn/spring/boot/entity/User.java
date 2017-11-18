@@ -2,7 +2,7 @@ package yyh.learn.spring.boot.entity;
 
 import java.io.Serializable;
 
-public class User implements Serializable{
+public class User implements Serializable {
     private String name;
     private String password;
     private Integer age;
@@ -36,5 +36,10 @@ public class User implements Serializable{
 
     public void setAge(Integer age) {
         this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return this.name + "-" + this.age;
     }
 }

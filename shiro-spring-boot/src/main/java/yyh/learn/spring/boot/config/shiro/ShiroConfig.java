@@ -1,15 +1,16 @@
 package yyh.learn.spring.boot.config.shiro;
 
-import org.apache.shiro.cache.ehcache.EhCacheManager;
+import org.apache.shiro.cache.CacheManager;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.session.mgt.SessionManager;
-import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import yyh.learn.spring.boot.cache.ShiroRedisCache;
+import yyh.learn.spring.boot.cache.ShiroRedisCacheManager;
 
 import javax.servlet.Filter;
 import java.util.LinkedHashMap;
@@ -81,7 +82,7 @@ public class ShiroConfig {
         // 设置session管理器
         securityManager.setSessionManager(sessionManager());
         // 设置缓存管理器
-        securityManager.setCacheManager(ehCacheManager());
+        securityManager.setCacheManager(cacheManager());
         return securityManager;
     }
 
@@ -90,10 +91,33 @@ public class ShiroConfig {
      *
      * @return
      */
-    public EhCacheManager ehCacheManager() {
-        EhCacheManager cacheManager = new EhCacheManager();
-        cacheManager.setCacheManagerConfigFile("classpath:shiro-ehcache.xml");
-        return cacheManager;
+//    public EhCacheManager cacheManager() {
+//        EhCacheManager cacheManager = new EhCacheManager();
+//        cacheManager.setCacheManagerConfigFile("classpath:shiro-ehcache.xml");
+//        return cacheManager;
+//    }
+
+    /**
+     * Shiro缓存管理器
+     *
+     * @return
+     */
+    @Bean(name = "shiroRedisCacheManager")
+    public CacheManager cacheManager() {
+        CacheManager shiroRedisCacheManager = new ShiroRedisCacheManager();
+        return shiroRedisCacheManager;
+    }
+
+    /**
+     * 使用RedisTemplate缓存
+     * <p>这里只是显式声明下，让ShrioRedisCacheManager能够自动注入Cache</p>
+     * <P>也是为了能够自动注入RedisTemplate</P>
+     *
+     * @return
+     */
+    @Bean
+    public ShiroRedisCache shiroRedisCache() {
+        return new ShiroRedisCache();
     }
 
     /**
@@ -103,6 +127,7 @@ public class ShiroConfig {
      */
     public SessionManager sessionManager() {
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
+//        sessionManager.setCacheManager(cacheManager());
         // 全局session过期时间设置为20分钟
         sessionManager.setGlobalSessionTimeout(20 * 60 * 1000L);
         return sessionManager;
@@ -117,11 +142,11 @@ public class ShiroConfig {
      * @return
      */
 //    @Bean
-    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
-        AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
-        authorizationAttributeSourceAdvisor.setSecurityManager(securityManager);
-        return authorizationAttributeSourceAdvisor;
-    }
+//    public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(SecurityManager securityManager) {
+//        AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
+//        authorizationAttributeSourceAdvisor.setSecurityManager(securityManager);
+//        return authorizationAttributeSourceAdvisor;
+//    }
 //    @Bean(name = "lifecycleBeanPostProcessor")
 //    public LifecycleBeanPostProcessor getLifecycleBeanPostProcessor() {
 //        return new LifecycleBeanPostProcessor();

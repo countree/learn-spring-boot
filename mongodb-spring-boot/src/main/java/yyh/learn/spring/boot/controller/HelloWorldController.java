@@ -1,4 +1,4 @@
-package yyh.learn.spring.boot.web;
+package yyh.learn.spring.boot.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

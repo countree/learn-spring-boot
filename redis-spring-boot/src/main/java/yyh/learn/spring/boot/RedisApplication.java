@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
  * @author yyh
  */
 @SpringBootApplication
-@EnableCaching
 public class RedisApplication {
 
     public static void main(String[] args) {

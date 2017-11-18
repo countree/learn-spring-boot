@@ -1,4 +1,4 @@
-package yyh.learn.spring.boot.web;
+package yyh.learn.spring.boot.controller;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;

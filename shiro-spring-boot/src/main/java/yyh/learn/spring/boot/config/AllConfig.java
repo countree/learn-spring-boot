@@ -22,4 +22,5 @@ public class AllConfig {
         filterRegistrationBean.setOrder(1);
         return filterRegistrationBean;
     }
+
 }
