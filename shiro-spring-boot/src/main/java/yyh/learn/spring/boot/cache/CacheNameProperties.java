@@ -13,7 +13,7 @@ public class CacheNameProperties {
     @Value("${redis.cache.names:defaultCacheName}")
     private String cacheNames;
 
-    public List<CacheNameExpireBean> getCacheNames() {
+    public List<CacheNameExpireBean> getConfiguredCacheNames() {
         String[] names = cacheNames.split(",");
         List<CacheNameExpireBean> cacheNameExpireBeanList = new ArrayList<CacheNameExpireBean>();
         for (String name : names) {
@@ -21,11 +21,11 @@ public class CacheNameProperties {
                 String[] nameExpire = name.split(":");
                 CacheNameExpireBean cacheNameExpireBean = new CacheNameExpireBean();
                 if (nameExpire.length == 1)
-                    cacheNameExpireBean.setCacheName(nameExpire[0]);
+                    cacheNameExpireBean.setCacheName(nameExpire[0].trim());
                 else if (nameExpire.length == 2) {
-                    cacheNameExpireBean.setCacheName(nameExpire[0]);
+                    cacheNameExpireBean.setCacheName(nameExpire[0].trim());
                     try {
-                        cacheNameExpireBean.setExpireTime(Long.valueOf(nameExpire[1]));
+                        cacheNameExpireBean.setExpireTime(Long.valueOf(nameExpire[1].trim()));
                     } catch (Exception e) {
                         throw new IllegalArgumentException("expireTime 类型为：[long] 单位/秒");
                     }

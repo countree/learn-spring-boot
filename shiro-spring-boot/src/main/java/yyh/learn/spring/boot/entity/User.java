@@ -1,6 +1,11 @@
 package yyh.learn.spring.boot.entity;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
+    private static final Long serialVersionUID = -11145555545445L;
+
+
     private String name;
     private String password;
     private Integer age;

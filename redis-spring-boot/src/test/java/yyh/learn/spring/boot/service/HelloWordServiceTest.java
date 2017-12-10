@@ -8,10 +8,14 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import yyh.learn.spring.boot.RedisApplication;
 import yyh.learn.spring.boot.cache.CacheNameConstant;
 import yyh.learn.spring.boot.entity.User;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = RedisApplication.class)
@@ -53,7 +57,15 @@ public class HelloWordServiceTest {
         stringRedisTemplate.opsForValue().set("key-test-yhh", "sdlfkjsdlkfjl 伺机待发");
         redisTemplate.opsForValue().set("key-test-yyh", "第二次设置key-test-yyh");
         redisTemplate.opsForValue().set("key-test-entity", new User("entity value"));
+    }
+
+    @Test
+    public void zSet() {
         stringRedisTemplate.opsForZSet().add(CacheNameConstant.AUTHORIZATION_CACHE_NAME, "session2", 0);
+//        stringRedisTemplate.opsForZSet().add(CacheNameConstant.AUTHORIZATION_CACHE_NAME, "session3", 0);
+//        stringRedisTemplate.opsForZSet().add(CacheNameConstant.AUTHORIZATION_CACHE_NAME, "session4", 0);
+//        stringRedisTemplate.boundZSetOps(CacheNameConstant.SESSION_CACHE_NAME).add("ddddddd", 2);
+//        redisTemplate.boundZSetOps("ssss").getOperations()
     }
 
 }

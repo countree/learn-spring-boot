@@ -1,5 +1,6 @@
 package yyh.learn.spring.boot.config.redis;
 
+import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +21,8 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import yyh.learn.spring.boot.cache.CacheNameConstant;
 import yyh.learn.spring.boot.cache.CacheNameExpireBean;
 import yyh.learn.spring.boot.cache.CacheNameProperties;
 
@@ -63,24 +66,40 @@ public class RedisConfig extends CachingConfigurerSupport {
      * @return
      */
     @Bean
-    public CacheManager cacheManager(@Qualifier("redisTemplate") RedisTemplate<?, ?> redisTemplate) {
-        RedisCacheManager cacheManager = new RedisCacheManager(redisTemplate);
+    public CacheManager cacheManager(@Qualifier("redisTemplate") RedisTemplate<?, ?> redisTemplate, RedisConnectionFactory factory) {
+        Map<String, RedisTemplate> redisTemplateMap = new HashMap<String, RedisTemplate>();
+        redisTemplateMap.put(CacheNameConstant.SHIRO_SESSION_CACHE_NAME, getJdkSerializeRedisTemplate(factory));
+
+        RedisCacheManager cacheManager = new CustomRedisCacheManager(redisTemplate, redisTemplateMap);
         List<String> cacheNameList = new ArrayList<String>();
         Map<String, Long> expireMap = new HashMap<String, Long>();
-        List<CacheNameExpireBean> list = cacheNamesProperties.getCacheNames();
-        for (CacheNameExpireBean cacheNameExpireBean : list) {
-            //这里的缓存名称其实就是redis中zset的key
-            cacheNameList.add(cacheNameExpireBean.getCacheName());
-            Long expireTime = cacheNameExpireBean.getExpireTime();
-            if (expireTime != null) {
-                //给单个缓存设置过期时间(其实还是对redis的key设置过期时间)单位/秒
-                expireMap.put(cacheNameExpireBean.getCacheName(), expireTime);
-            }
-        }
+//        List<CacheNameExpireBean> list = cacheNamesProperties.getConfiguredCacheNames();
+//        for (CacheNameExpireBean cacheNameExpireBean : list) {
+//            //这里的缓存名称其实就是redis中zset的key
+//            cacheNameList.add(cacheNameExpireBean.getCacheName());
+//            Long expireTime = cacheNameExpireBean.getExpireTime();
+//            if (expireTime != null) {
+//                //给单个缓存设置过期时间(其实还是对redis的key设置过期时间)单位/秒
+//                expireMap.put(cacheNameExpireBean.getCacheName(), expireTime);
+//            }
+//        }
+        cacheNameList.add(CacheNameConstant.DEFAULT_CACHE_NAME);
+        cacheNameList.add(CacheNameConstant.SHIRO_AUTHORIZATION_CACHE_NAME);
+        cacheNameList.add(CacheNameConstant.SHIRO_SESSION_CACHE_NAME);
+        expireMap.put(CacheNameConstant.SHIRO_AUTHORIZATION_CACHE_NAME, 18000L);
+        expireMap.put(CacheNameConstant.SHIRO_SESSION_CACHE_NAME, 36000L);
         cacheManager.setExpires(expireMap);
         cacheManager.setCacheNames(cacheNameList);
         LOG.info("初始化缓存名称:{}", cacheNameList);
         return cacheManager;
+    }
+
+    private RedisTemplate getJdkSerializeRedisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate template = new RedisTemplate();
+        template.setConnectionFactory(factory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.afterPropertiesSet();
+        return template;
     }
 
     @Bean
@@ -91,9 +110,11 @@ public class RedisConfig extends CachingConfigurerSupport {
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
         jackson2JsonRedisSerializer.setObjectMapper(om);
+        template.setDefaultSerializer(jackson2JsonRedisSerializer);
+
+
         template.setConnectionFactory(factory);
         //替换掉redis默认的序列化 使用json序列化
-        template.setDefaultSerializer(jackson2JsonRedisSerializer);
         template.afterPropertiesSet();
         return template;
     }

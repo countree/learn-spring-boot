@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import yyh.learn.spring.boot.cache.CacheNameConstant;
-import yyh.learn.spring.boot.cache.ShiroSpringCacheManager;
+import yyh.learn.spring.boot.config.shiro.cache.ShiroRedisCacheManager;
+import yyh.learn.spring.boot.config.shiro.session.CustomSessionDao;
 
 import javax.servlet.Filter;
 import java.util.LinkedHashMap;
@@ -41,10 +42,8 @@ public class ShiroConfig {
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
         shiroFilterFactoryBean.setLoginUrl("/login");
         shiroFilterFactoryBean.setSuccessUrl("/");
-        shiroFilterFactoryBean.setUnauthorizedUrl("/403");
         filterChainDefinitionMap.put("/login", "anon");
         filterChainDefinitionMap.put("/static/**", "anon");
-        filterChainDefinitionMap.put("/403", "anon");
         filterChainDefinitionMap.put("/logout", "logout");
         filterChainDefinitionMap.put("/**", "authc,urlPerms[]");
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
@@ -55,11 +54,11 @@ public class ShiroConfig {
     @Bean
     public AuthorizingRealm getMyAuthRealm() {
         //因为realm需要 自动注入service所以必须由spring管理realm
-        AuthorizingRealm userRealm = new MyAuthRealm();
+        AuthorizingRealm userRealm = new CustomAuthRealm();
         //设置自定义的密码对比方法
         userRealm.setCredentialsMatcher(new CustomCredentialsMatcher());
 //        //启用缓存,默认false
-//        userRealm.setCachingEnabled(true);
+        userRealm.setCachingEnabled(true);
 //        //  启用身份验证缓存，即缓存AuthenticationInfo信息，默认false；
 //        userRealm.setAuthenticationCachingEnabled(true);
 //        //  缓存AuthenticationInfo信息的缓存名称,即配置在ehcache.xml中的cache name
@@ -67,7 +66,7 @@ public class ShiroConfig {
 //        //  启用授权缓存，即缓存AuthorizationInfo信息，默认true； 默认值根据版本不同可能有不一样
         userRealm.setAuthorizationCachingEnabled(true);
         //  缓存AuthorizationInfo信息的缓存名称；
-        userRealm.setAuthorizationCacheName(CacheNameConstant.AUTHORIZATION_CACHE_NAME);
+        userRealm.setAuthorizationCacheName(CacheNameConstant.SHIRO_AUTHORIZATION_CACHE_NAME);
         return userRealm;
     }
 
@@ -77,12 +76,12 @@ public class ShiroConfig {
      * @return
      */
     @Bean(name = "securityManager")
-    public SecurityManager securityManager(@Qualifier("shiroCacheManager") CacheManager cacheManager) {
+    public SecurityManager securityManager(@Qualifier("shiroCacheManager") CacheManager cacheManager, SessionManager sessionManager) {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         // 设置realm
         securityManager.setRealm(getMyAuthRealm());
         // 设置session管理器
-        securityManager.setSessionManager(sessionManager());
+        securityManager.setSessionManager(sessionManager);
         // 设置缓存管理器
         securityManager.setCacheManager(cacheManager);
         return securityManager;
@@ -106,7 +105,7 @@ public class ShiroConfig {
      */
     @Bean(name = "shiroCacheManager")
     public CacheManager cacheManager(@Qualifier("cacheManager") org.springframework.cache.CacheManager cacheManager, @Qualifier("redisTemplate") RedisTemplate redisTemplate) {
-        CacheManager shiroRedisCacheManager = new ShiroSpringCacheManager(cacheManager, redisTemplate);
+        CacheManager shiroRedisCacheManager = new ShiroRedisCacheManager(cacheManager, redisTemplate);
         return shiroRedisCacheManager;
     }
 
@@ -115,9 +114,13 @@ public class ShiroConfig {
      *
      * @return
      */
-    public SessionManager sessionManager() {
+    @Bean(name = "sessionManager")
+    public SessionManager sessionManager(@Qualifier("shiroCacheManager") CacheManager cacheManager) {
         DefaultWebSessionManager sessionManager = new DefaultWebSessionManager();
-//        sessionManager.setCacheManager(cacheManager());
+        sessionManager.setCacheManager(cacheManager);
+        CustomSessionDao sessionDAO = new CustomSessionDao();
+        sessionDAO.setActiveSessionsCacheName(CacheNameConstant.SHIRO_SESSION_CACHE_NAME);
+//        sessionManager.setSessionDAO(sessionDAO);
         // 全局session过期时间设置为20分钟
         sessionManager.setGlobalSessionTimeout(20 * 60 * 1000L);
         return sessionManager;

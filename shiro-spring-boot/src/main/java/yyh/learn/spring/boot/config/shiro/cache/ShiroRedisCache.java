@@ -1,11 +1,8 @@
-package yyh.learn.spring.boot.cache;
+package yyh.learn.spring.boot.config.shiro.cache;
 
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
-import org.apache.shiro.dao.DataAccessException;
-import org.springframework.data.redis.cache.RedisCache;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.cache.RedisCacheElement;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Collection;
@@ -17,6 +14,7 @@ public class ShiroRedisCache<K, V> implements Cache<K, V> {
 
     RedisTemplate<K, V> redisTemplate;
 
+
     public ShiroRedisCache() {
     }
 
@@ -27,12 +25,19 @@ public class ShiroRedisCache<K, V> implements Cache<K, V> {
 
     @Override
     public V get(Object k) throws CacheException {
-        return (V) cache.get(k);
+        Object value = cache.get(k);
+        if (value == null)
+            return null;
+        if (value instanceof RedisCacheElement) {
+            value = ((RedisCacheElement) value).get();
+        }
+        return (V) value;
     }
 
     @Override
     public V put(final K k, final V v) throws CacheException {
-        cache.put(k, v);
+        Object value = v;
+        cache.put(k, value);
         return v;
     }
 
@@ -64,4 +69,5 @@ public class ShiroRedisCache<K, V> implements Cache<K, V> {
     public Collection<V> values() {
         return redisTemplate.boundZSetOps((K) cache.getName()).range(0, redisTemplate.opsForZSet().size((K) cache.getName()));
     }
+
 }
